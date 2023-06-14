@@ -1,30 +1,17 @@
-# Python on Replit
+Task: 
+Implement a Django API endpoint to create and update user profiles 
 
-This is a template to get you started with Python on Replit. It's ready to go so you can just hit run and start coding!
+Description: 
+You are tasked with creating a Django API endpoint that allows users to create and update their profiles. The profile should include fields such as name, email, bio, and profile picture. Users should be able to send POST requests to create a new profile or PATCH requests to update their existing profile. 
 
-## Running the repl
+Result:-
+  1->'/api/user/login/' to login user with content type application/json
+  2->'/api/user/logout/' to logout the user
+  3->'/api/user/profile/' is has 3 action :-
+      *post with multipart formdata to create user
+      *get to see all user
+      *patch update multiple field with content type application/json (except profile pic)      
+  4->'/api/user/updating_profile_picture/' post call to update profile picture with multipart formdata
+  5->'/api/user/updating_profile_to_super_user/' post call with content type application/json to give a porfile user power to add and update profile
 
-1. Setup a new secret environment variable (the lock icon) where the key is `SECRET_KEY` and the value is
-   a randomly generated token of 32 bits of randomnese. To generate such a token type this into the shell and hit Enter:
-```
-python
-import secrets
-secrets.token_urlsafe(32)
-```
-2. Hit run!
-
-See this 1 minute video for a walkthrough: [https://www.loom.com/share/ecc4e738149f4d1db3bcff01758b3e71](https://www.loom.com/share/341b5574d12040fb9fcbbff150777f1c)
-
-## Installing packages
-
-To add packages to your repl, you can just import directly in the file you want to use the package in, and it will automatically be installed when you press the run button. Like below:
-```python
-import math
-import pandas as pd
-```
-
-You could also install packages by using the Replit packager interface in the left sidebar.
-
-## Help
-
-If you need help you might be able to find an answer on our [docs](https://docs.replit.com) page. Feel free to report bugs and give us feedback [here](https://replit.com/support).
+  Note:- step 3 to 5 can only be done by super user

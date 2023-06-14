@@ -1,6 +1,5 @@
 from ..models import Profile, UserPermission
-from django.contrib.auth.hashers import check_password
-from django.contrib.auth.hashers import make_password
+from django.contrib.auth.hashers import check_password, make_password
 import uuid
 import base64
 import os
@@ -17,7 +16,6 @@ class UserResource:
     letting user to login
     '''
         try:
-            print(username, password)
             profile = Profile.objects.filter(username=username).first()
         except:
             return {'error_msg': 'invalid username'}, 400, None
@@ -33,7 +31,7 @@ class UserResource:
                 'authtoken': uuid_str
             }
         else:
-            return {'error_msg': 'invalid password'}, 400, None
+            return {'Error_msg': 'invalid password'}, 400, None
 
     def logout(self, request):
         '''
@@ -42,7 +40,7 @@ class UserResource:
         try:
             authtoken = request.COOKIES.get('authtoken')
         except:
-            return {'Error_msg': 'No token persent'}, 200, None
+            return {'Error_msg': 'No token persent'}, 400, None
         if UserPermission.objects.filter(token=authtoken).exists():
             user_permission = UserPermission.objects.filter(
                 token=authtoken).first()
@@ -53,7 +51,7 @@ class UserResource:
             }, 200, {
                 'authtoken': ''
             }
-        return {'Error_msg': 'Invalid Authtoken'}, 200, None
+        return {'Error_msg': 'Invalid Authtoken'}, 400, None
 
     def create_profile(self, request):
         '''
@@ -62,7 +60,7 @@ class UserResource:
         try:
             authtoken = request.COOKIES.get('authtoken')
         except:
-            return {'Error_msg': 'No token persent'}, 200, None
+            return {'Error_msg': 'No token persent'}, 400, None
         flag = False
         if authtoken is None:
             flag = self.getting_authentication(request)
@@ -70,37 +68,42 @@ class UserResource:
             flag = UserPermission.objects.filter(
                 token=authtoken).values('is_super_user').first()
         if flag:
-            username = request.POST.get('username',None)
-            email = request.POST.get('email',None)
-            password = request.POST.get('password',None)
+            username = request.POST.get('username', None)
+            email = request.POST.get('email', None)
+            password = request.POST.get('password', None)
             if not (self.check_email_format(email) and username and password):
-              return {'Error_msg': 'Inviald username or email'}, 400, None
-            profile = Profile(username=username,
-                              email=email,
-                              password=make_password(password))
+                return {
+                    'Error_msg': 'Inviald username or email or password'
+                }, 400, None
+            try:
+                profile = Profile(username=username,
+                                  email=email,
+                                  password=make_password(password))
 
-            first_name = request.POST.get('first_name', None)
-            if first_name:
-                profile.first_name = first_name
+                first_name = request.POST.get('first_name', None)
+                if first_name:
+                    profile.first_name = first_name
 
-            last_name = request.POST.get('last_name', None)
-            if last_name:
-                profile.last_name = last_name
+                last_name = request.POST.get('last_name', None)
+                if last_name:
+                    profile.last_name = last_name
 
-            bio = request.POST.get('bio', None)
-            if bio:
-                profile.bio = bio
+                bio = request.POST.get('bio', None)
+                if bio:
+                    profile.bio = bio
 
-            profile_picture = request.FILES.get('profile_picture', None)
-            if password:
-                profile.password = profile_picture
+                profile_picture = request.FILES.get('profile_picture', None)
+                if profile_picture:
+                    profile.profile_picture = profile_picture
 
-            profile.save()
-            user_permission = UserPermission(user_profile=profile)
-            user_permission.save()
+                profile.save()
+                user_permission = UserPermission(user_profile=profile)
+                user_permission.save()
+            except:
+                return {'Error_msg': 'profile already persent'}, 400, None
             return {'Success_msg': 'Profile created successfully'}, 200, None
         else:
-            return {'Error_msg': 'fail to authenticate given user'}, 200, None
+            return {'Error_msg': 'fail to authenticate given user'}, 400, None
 
     def listing_profile(self, request):
         '''
@@ -109,7 +112,7 @@ class UserResource:
         try:
             authtoken = request.COOKIES.get('authtoken')
         except:
-            return {'Error_msg': 'No token persent'}, 200, None
+            return {'Error_msg': 'No token persent'}, 400, None
         flag = False
         if authtoken is None:
             flag = self.getting_authentication(request)
@@ -135,7 +138,7 @@ class UserResource:
             } for profile in profile_list]
             return response, 200, None
         else:
-            return {'Error_msg': 'fail to authenticate given user'}, 200, None
+            return {'Error_msg': 'fail to authenticate given user'}, 400, None
 
     def updating_profile_picture(self, request):
         '''
@@ -144,7 +147,7 @@ class UserResource:
         try:
             authtoken = request.COOKIES.get('authtoken')
         except:
-            return {'Error_msg': 'No token persent'}, 200, None
+            return {'Error_msg': 'No token persent'}, 400, None
         flag = False
         if authtoken is None:
             flag = self.getting_authentication(request)
@@ -153,10 +156,10 @@ class UserResource:
                 token=authtoken).values('is_super_user').first()
         if flag:
             profile_picture = request.FILES.get('profile_picture')
-            username = request.POST.get('username',None)
-            email = request.POST.get('email',None)
+            username = request.POST.get('username', None)
+            email = request.POST.get('email', None)
             if not (self.check_email_format(email) and username):
-              return {'Error_msg': 'Inviald username or email'}, 400, None
+                return {'Error_msg': 'Inviald username or email'}, 400, None
             profile = Profile.objects.get(username=username, email=email)
             old_image_path = profile.image_field.path
             profile.profile_picture = profile_picture
@@ -168,7 +171,7 @@ class UserResource:
                 'Success_msg': 'Profile picture Updated successfully'
             }, 200, None
         else:
-            return {'Error_msg': 'fail to authenticate given user'}, 200, None
+            return {'Error_msg': 'fail to authenticate given user'}, 400, None
 
     def updating_profile_to_super_user(self, request):
         '''
@@ -177,7 +180,7 @@ class UserResource:
         try:
             authtoken = request.COOKIES.get('authtoken')
         except:
-            return {'Error_msg': 'No token persent'}, 200, None
+            return {'Error_msg': 'No token persent'}, 400, None
         flag = False
         if authtoken is None:
             flag = self.getting_authentication(request)
@@ -187,9 +190,9 @@ class UserResource:
         if flag:
             json_data = request.body.decode('utf-8')
             data = json.loads(json_data)
-            username = data.get('username',None)
+            username = data.get('username', None)
             if not username:
-              return {'Error_msg': 'Inviald username'}, 400, None
+                return {'Error_msg': 'Inviald username'}, 400, None
             profile = Profile.objects.get(username=username)
             user_permission = UserPermission.objects.get(user_profile=profile)
             user_permission.is_super_user = True
@@ -215,12 +218,14 @@ class UserResource:
         if flag:
             json_data = request.body.decode('utf-8')
             data = json.loads(json_data)
-            username = data.get('username',None)
-            email = data.get('email',None)
+            username = data.get('username', None)
+            email = data.get('email', None)
             if not (self.check_email_format(email) and username):
-              return {'Error_msg': 'Inviald username or email'}, 400, None
-            profile = Profile.objects.get(username=username, email=email)
-
+                return {'Error_msg': 'Inviald username or email'}, 400, None
+            try:
+                profile = Profile.objects.get(username=username, email=email)
+            except:
+              return {'Error_msg': 'No Profile with this username or email exists'}, 400, None 
             first_name = data.get('first_name', None)
             if first_name:
                 profile.first_name = first_name
@@ -247,11 +252,12 @@ class UserResource:
         '''
       Getting username and password with basic authentication
       '''
-        auth_header = request.META.get('HTTP_AUTHORIZATION', '')
-        if auth_header.startswith('Basic '):
-            base64_decoded = base64.b64decode(auth_header[6:]).decode('utf-8')
-        username, password = base64_decoded.split(':')
         try:
+            auth_header = request.META.get('HTTP_AUTHORIZATION', '')
+            if auth_header.startswith('Basic '):
+                base64_decoded = base64.b64decode(
+                    auth_header[6:]).decode('utf-8')
+            username, password = base64_decoded.split(':')
             profile = Profile.objects.filter(username=username).first()
             if check_password(password, profile.password):
                 user_permission = UserPermission.objects.filter(
